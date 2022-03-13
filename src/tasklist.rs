@@ -4,12 +4,12 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::path::Path;
 use crate::task::{Task};
+use crate::utils::err_no_task;
 
 #[derive(Serialize, Deserialize)]
 pub struct TaskList {
     pub max_id: usize,
     pub count: usize,
-    pub task_ids: Vec<usize>,
     pub task_list: HashMap<usize, Task>,
 }
 
@@ -18,7 +18,6 @@ impl<'a> TaskList {
         TaskList {
             max_id: 0,
             count: 0,
-            task_ids: Vec::with_capacity(capacity),
             task_list: HashMap::with_capacity(capacity),
         }
     }
@@ -55,10 +54,6 @@ impl<'a> TaskList {
             return Err("Task with the same ID already exists");
         }
 
-        let pos: usize = self.task_ids.partition_point(|id| {
-            !(self.task_list[&id].priority_le(&task))
-        });
-        self.task_ids.insert(pos, task_id);
         self.task_list.insert(task_id, task);
 
         self.count += 1;
@@ -68,22 +63,24 @@ impl<'a> TaskList {
     }
 
     pub fn remove(&mut self, id: usize) -> Result<(), &'a str> {
-        let pos = match self.task_ids.binary_search(&id) {
-            Ok(pos) => pos,
-            Err(_) => return Err("Cannot find task with given ID"),
-        };
-        self.task_ids.remove(pos);
-        self.task_list.remove(&id);
-
-        self.count -= 1;
-        while self.max_id > 0 {
-            if self.task_list.contains_key(&self.max_id) {
-                break;
-            }
-            self.max_id -= 1;
+        if !self.task_list.contains_key(&id) {
+            err_no_task(id);
         }
 
-        Ok(())
+        match self.task_list.remove(&id) {
+            Some(_) => {
+                self.count -= 1;
+                while self.max_id > 0 {
+                    if self.task_list.contains_key(&self.max_id) {
+                        break;
+                    }
+                    self.max_id -= 1;
+                }
+
+                Ok(())
+            },
+            None => Err("Could not remove task")
+        }
     }
 
     pub fn get_mut(&mut self, index: &usize) -> &mut Task {

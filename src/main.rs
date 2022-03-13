@@ -137,7 +137,10 @@ fn main() {
         Some(("remove", matches)) => {
             let task_id: usize = get_task_id(matches);
             match task_list.remove(task_id) {
-                Ok(_) => save_and_exit(&todo_path, &task_list),
+                Ok(task) => {
+                    println!("Removed task {}", task);
+                    save_and_exit(&todo_path, &task_list);
+                },
                 Err(e) => print_error(e.to_owned()),
             }
         },

@@ -62,13 +62,13 @@ impl<'a> TaskList {
         Ok(())
     }
 
-    pub fn remove(&mut self, id: usize) -> Result<(), &'a str> {
+    pub fn remove(&mut self, id: usize) -> Result<Task, &'a str> {
         if !self.task_list.contains_key(&id) {
             err_no_task(id);
         }
 
         match self.task_list.remove(&id) {
-            Some(_) => {
+            Some(task) => {
                 self.count -= 1;
                 while self.max_id > 0 {
                     if self.task_list.contains_key(&self.max_id) {
@@ -77,7 +77,7 @@ impl<'a> TaskList {
                     self.max_id -= 1;
                 }
 
-                Ok(())
+                Ok(task)
             },
             None => Err("Could not remove task")
         }

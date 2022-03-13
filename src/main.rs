@@ -3,7 +3,6 @@ mod utils;
 mod tags;
 mod tasklist;
 
-use std::borrow::Borrow;
 use clap::{Arg, Command};
 use std::process::exit;
 use itertools::Itertools;
@@ -170,21 +169,21 @@ fn main() {
 
             println!();
             if task_list.count > 0 {
-                let sorted = task_list.task_list.iter().sorted_by(
-                    |a, b| a.1.priority_cmp(b.1).reverse()
-                );
-                for task_id in sorted {
-                    let task: &Task = task_list.task_list[task_id.0].borrow();
-                    let completed: bool = task.is_completed();
-                    let in_progress: bool = task.is_in_progress();
-                    let width = task_list.max_id.number_of_digits() + 1;
-
-                    if all || (completed && done)
+                let sorted = task_list.task_list.iter()
+                    .filter(|task| {
+                        let completed: bool = task.1.is_completed();
+                        let in_progress: bool = task.1.is_in_progress();
+                        all || (completed && done)
                         || (in_progress && started)
-                        || (!completed && !done && !started) {
-                        task.print(width, print_desc);
-                        no_print = false;
-                    }
+                        || (!completed && !done && !started)
+                    })
+                    .sorted_by(
+                        |a, b| a.1.priority_cmp(b.1).reverse()
+                    );
+                for task_id in sorted {
+                    let width = task_list.max_id.number_of_digits() + 1;
+                    task_list.task_list[task_id.0].print(width, print_desc);
+                    no_print = false;
                 }
             }
 

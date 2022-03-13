@@ -170,8 +170,11 @@ fn main() {
 
             println!();
             if task_list.count > 0 {
-                for task_id in task_list.task_ids {
-                    let task: &Task = task_list.task_list[&task_id].borrow();
+                let sorted = task_list.task_list.iter().sorted_by(
+                    |a, b| a.1.priority_cmp(b.1).reverse()
+                );
+                for task_id in sorted {
+                    let task: &Task = task_list.task_list[task_id.0].borrow();
                     let completed: bool = task.is_completed();
                     let in_progress: bool = task.is_in_progress();
                     let width = task_list.max_id.number_of_digits() + 1;

@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use colored::{ColoredString, Colorize};
 use serde::{Serialize, Deserialize};
 use std::collections::HashSet;
@@ -122,8 +123,10 @@ impl Task {
         }
     }
 
-    pub fn priority_le(&self, other: &Task) -> bool {
-        self.priority_eq(other) || self.priority_lt(other)
+    pub fn priority_cmp(&self, other: &Task) -> Ordering {
+        if self.priority_eq(&other) { Ordering::Equal }
+        else if self.priority_lt(&other) { Ordering::Less }
+        else { Ordering::Greater }
     }
 }
 
